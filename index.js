@@ -1,5 +1,5 @@
-require("dotenv").config()
-
+const path = require("path")
+require("dotenv").config({ path: path.join(__dirname, ".env") })
 const { getSaasData } = require("./golden")
 const { Telegraf } = require("telegraf")
 
