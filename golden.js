@@ -1,4 +1,5 @@
 const { fetchPageData } = require("./http")
+const { isListed, addToUsedList } = require("./used")
 const apiUrl =
   "https://golden.com/api/v1/queries/list-of-software-as-a-service-companies/results/"
 //?page=1&per_page=100
@@ -11,6 +12,9 @@ const getDataOffset = () => {
   const page = Math.random() * (maxPage - minPage) + minPage
   const post = Math.random() * (perPage - minPage) + minPage
 
+  if (isListed(post * page)) {
+    return getDataOffset()
+  }
   return [page, post].map(Math.round)
 }
 
@@ -57,6 +61,9 @@ const getSaasData = async () => {
     const data = await fetchPageData(url)
     const { results } = data
     const saas = results[post - 1]
+
+    addToUsedList(page * post)
+
     return parseSiteData(saas)
   } catch (error) {
     console.error(error)
