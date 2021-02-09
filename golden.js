@@ -15,7 +15,7 @@ const getDataOffset = () => {
 }
 
 const parseSiteData = (data) => {
-  const { name, thumbnail, infobox, description, generated_description } = data
+  const { name, thumbnail, description, generated_description } = data
   const icon = thumbnail.original || ""
 
   const info = collectLeafs({
