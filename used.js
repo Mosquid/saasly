@@ -1,24 +1,25 @@
-const fs = require("fs")
-const listPath = "./list.json"
-let memList = null
+const fs = require("fs");
+const listPath = "./list.json";
+let memList = null;
 
 module.exports.getUsedList = () => {
-  if (memList) return memList
-  if (fs.existsSync(listPath)) {
-    memList = JSON.parse(fs.readFileSync(listPath, "utf8"))
+  if (!memList) {
+    if (fs.existsSync(listPath)) {
+      memList = JSON.parse(fs.readFileSync(listPath, "utf8"));
+    }
   }
 
-  return []
-}
+  return memList;
+};
 
 module.exports.addToUsedList = (num) => {
-  memList = memList || []
-  memList.push(num)
+  memList = memList || [];
+  memList.push(num);
 
-  fs.writeFileSync(listPath, JSON.stringify(memList))
-}
+  fs.writeFileSync(listPath, JSON.stringify(memList));
+};
 
 module.exports.isListed = (num) => {
-  const list = module.exports.getUsedList()
-  if (list.includes(num)) return false
-}
+  const list = module.exports.getUsedList();
+  if (list.includes(num)) return false;
+};
