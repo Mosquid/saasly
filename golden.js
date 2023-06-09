@@ -1,88 +1,70 @@
 const { fetchPageData } = require("./http");
-const { isListed, addToUsedList } = require("./used");
-const apiUrl = "https://golden.com/api/v1/";
-//?page=1&per_page=100
-
-const minPage = 1;
-const maxPage = 30;
-const perPage = 10;
+const { isListed, incrementOffset } = require("./used");
+const ogs = require("open-graph-scraper");
+const csv = require("csvtojson");
 
 const getDataOffset = () => {
-  const page = Math.random() * (maxPage - minPage) + minPage;
-  const post = Math.random() * (perPage - minPage) + minPage;
+  return incrementOffset();
+};
 
-  if (isListed(post * page)) {
-    return getDataOffset();
+function normalizeDomain(domain) {
+  // Check if the domain starts with 'http://' or 'https://'
+  if (!/^https?:\/\//i.test(domain)) {
+    // If not, add 'https://' by default
+    domain = "https://" + domain;
   }
-  return [page, post].map(Math.round);
-};
 
-const parseSiteData = (data) => {
-  if (!data) return null;
-
-  const { name, thumbnail, description, generated_description = {} } = data;
-  const icon = thumbnail.original || "";
-
-  const info = collectLeafs({
-    nodes: [].concat(generated_description.nodes, description.nodes),
-  })
-    .join(" ")
-    .trim();
-
-  return {
-    name,
-    info,
-    icon,
-  };
-};
-
-const collectLeafs = (desc = {}) => {
   try {
-    const { nodes = [] } = desc;
+    // Create a URL object to validate and normalize the domain
+    const url = new URL(domain);
 
-    return nodes.map((node) => {
-      if (node && node.leaves) {
-        return node.leaves
-          .map(({ text }) => text)
-          .filter(Boolean)
-          .join(" ");
-      }
-      return collectLeafs(node);
-    });
+    // Return the normalized URL as a string
+    return url.origin;
   } catch (error) {
-    console.error(error);
+    // If there's an error, the domain is not valid
+    console.error("Invalid domain:", domain);
     return null;
   }
-};
+}
 
 const getSaasData = async () => {
   try {
-    const [page, post] = getDataOffset();
-    const url = `${apiUrl}queries/list-of-software-as-a-service-companies-BMY/results?page=${page}&per_page=${perPage}`;
-    const data = await fetchPageData(url);
-    const { results } = data;
-    const saas = results[post - 1];
+    const data = await csv().fromFile("./companies.csv");
+    const offset = getDataOffset();
+    const item = data[Number(offset)];
+    const details = await getCompanyDetails(item.Website);
+    const name = item["Company Name"];
+    const info = item["Company Description"];
+    const icon = details.image;
 
-    addToUsedList(page * post);
-
-    return getCompanyDetails(saas.slug);
+    return {
+      name,
+      info,
+      icon,
+    };
   } catch (error) {
     console.error(error);
     return null;
   }
 };
 
-const getCompanyDetails = async (cid) => {
+const getCompanyDetails = async (domain) => {
   try {
-    const url = `${apiUrl}entities/${cid}/?quick_view=true`;
-    const data = await fetchPageData(url);
-    const { structuredData } = data;
+    const data = await ogs({
+      timeout: 10000,
+      fetchOptions: {
+        signal: null,
+      },
+      url: normalizeDomain(domain),
+    });
 
-    if (!structuredData) return null;
-    return parseSiteData(structuredData);
+    const { result } = data;
+    const { ogImage } = result;
+
+    return { image: ogImage[0].url };
   } catch (error) {
     console.error(error);
-    return null;
+    return {};
   }
 };
 
