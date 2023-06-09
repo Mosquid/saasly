@@ -61,7 +61,9 @@ const getCompanyDetails = async (domain) => {
     const { result } = data;
     const { ogImage } = result;
 
-    return { image: ogImage[0].url };
+    const url = Array.isArray(ogImage) ? ogImage[0].url : ogImage.url;
+
+    return { image: url };
   } catch (error) {
     console.error(error);
     return {};

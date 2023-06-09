@@ -17,7 +17,7 @@
     "axios": "^0.21.1",
     "csvtojson": "^2.0.10",
     "dotenv": "^8.2.0",
-    "open-graph-scraper": "^6.1.0",
+    "open-graph-scraper": "^4.11.1",
     "telegraf": "^4.0.3"
   }
 }
