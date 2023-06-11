@@ -2,6 +2,7 @@ const { fetchPageData } = require("./http");
 const { isListed, incrementOffset } = require("./used");
 const ogs = require("open-graph-scraper");
 const csv = require("csvtojson");
+const { resolve } = require("path");
 
 const getDataOffset = () => {
   return incrementOffset();
@@ -29,7 +30,7 @@ function normalizeDomain(domain) {
 
 const getSaasData = async () => {
   try {
-    const data = await csv().fromFile("./companies.csv");
+    const data = await csv().fromFile(resolve("./companies.csv"));
     const offset = getDataOffset();
     const item = data[Number(offset)];
     const details = await getCompanyDetails(item.Website);
